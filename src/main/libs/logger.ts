@@ -23,12 +23,15 @@ class Logger implements ILogger {
         this.initalizeTransports();
     }
 
+    //obitiene la ruta por defecto para los logs
+    //en la carpeta dependiendo del sistema operativo
+    // Windows: %APPDATA%/YourAppName/logs MAC: ~/Library/Logs/YourAppName Linux: ~/.config/YourAppName/logs
     private getDefaultLogDir(): string {
         const userDataPath = app.getPath('userData');
         return join (userDataPath, 'logs');
     }
 
-    //verifica el nivel del log
+    //verifica el nivel del log, para saber si debe registrarse o no
     private shouldLog(level: LogLevel): boolean {
         const levels = [
             LogLevel.ERROR,
@@ -44,6 +47,8 @@ class Logger implements ILogger {
         return messageLevelIndex <= configLevelIndex;
     }
 
+    //Inicializa los transportes de log
+    //Como consola y archivo
     private initalizeTransports(): void {
         // Console transport
         if (this.config.enableConsole) {
@@ -52,6 +57,7 @@ class Logger implements ILogger {
         }
     }
 
+    //Crea una entrada de log estandarizada siguiente los tipos declarado en logger.types.ts
     private createLogEntry(
         level: LogLevel,
         message: string,
@@ -69,6 +75,8 @@ class Logger implements ILogger {
         }
     }
 
+
+    //Procesa una entrada de log enviandola a los transportes configurados
     private async processLogEntry(entry: LogEntry): Promise<void> {
         if (!this.shouldLog(entry.level)) {
             return;
