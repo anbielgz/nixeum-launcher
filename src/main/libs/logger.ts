@@ -1,5 +1,5 @@
 import { LogLevel, LogEntry, LoggerConfig, ILogger, LoggerTransport } from "../../shared/types/logger.types";
-import { ConsoleTranport } from "./loggerTransports";
+import { ConsoleTranport, FileTransport } from "./loggerTransports";
 import { app } from 'electron';
 import { join } from "path";
 
@@ -7,6 +7,7 @@ class Logger implements ILogger {
     private config: LoggerConfig;
     private transports: LoggerTransport[];
     private consoleTransport?: ConsoleTranport;
+    private fileTransport?: FileTransport;
   
     constructor(config?: Partial<LoggerConfig>) {
         this.config ={
@@ -25,7 +26,7 @@ class Logger implements ILogger {
 
     //obitiene la ruta por defecto para los logs
     //en la carpeta dependiendo del sistema operativo
-    // Windows: %APPDATA%/YourAppName/logs MAC: ~/Library/Logs/YourAppName Linux: ~/.config/YourAppName/logs
+    // Windows: %APPDATA%/YourAppName/logs - MAC: ~/Library/Logs/YourAppName - Linux: ~/.config/YourAppName/logs
     private getDefaultLogDir(): string {
         const userDataPath = app.getPath('userData');
         return join (userDataPath, 'logs');
@@ -55,7 +56,15 @@ class Logger implements ILogger {
             this.consoleTransport = new ConsoleTranport(true);
             this.transports.push((entry ) => this.consoleTransport!.log(entry));
         }
-    }
+        if (this.config.enableFile && this.config.logDir) { 
+            this.fileTransport = new FileTransport(
+                this.config.logDir,
+                this.config.maxFileSize * 1024 * 1024, // Convertir MB a bytes
+                this.config.maxFiles
+            );
+            this.transports.push((entry) => this.fileTransport!.log(entry) );
+        }
+    } 
 
     //Crea una entrada de log estandarizada siguiente los tipos declarado en logger.types.ts
     private createLogEntry(
