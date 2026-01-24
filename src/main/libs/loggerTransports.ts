@@ -28,7 +28,7 @@ export class ConsoleTranport {
 
         const timestamp = new Date(entry.timestamp).toLocaleDateString()
         const contextStr = entry.context ? `[${entry.context}]` : '';
-        const levelStr = entry.level.toUpperCase().padEnd(7);
+        const levelStr = `[${entry.level.toUpperCase()}]`;
 
         let message = `${color}${timestamp} ${levelStr}${reset} ${contextStr} ${entry.message}`;
 

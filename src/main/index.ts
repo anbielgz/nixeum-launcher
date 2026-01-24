@@ -1,7 +1,9 @@
 import { app, BrowserWindow} from 'electron'
+import { registerLoggerHandlers, unregisterLoggerHandlers } from './ipc/loggerHandlers'
 import path from 'path'
-import { initializeLogger } from './libs/logger'
+import { closeLogger, initializeLogger } from './libs/logger'
 import { LogLevel } from '../shared/types/logger.types'
+
 
 const logger = initializeLogger({
     level: LogLevel.DEBUG,
@@ -35,11 +37,27 @@ async function createWindow(){
 }
 
 app.whenReady().then(async() => {
-    await createWindow()
+    try {
+        registerLoggerHandlers();
+        await createWindow();
+    } catch (error) { 
+        logger.error('Error durante la inicialización de la aplicación:', 'Main Process Electron', { error });
+        app.quit();
+    }
+
+})
+
+app.on('before-quit', () => {
+    unregisterLoggerHandlers();
 })
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
         app.quit()
     }
+})
+
+app.on('quit', () => {
+    logger.info('Saliendo de la aplicación...', 'Main Process Electron');
+    closeLogger();
 })
