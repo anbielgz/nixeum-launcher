@@ -4,7 +4,7 @@ import {
   unregisterLoggerHandlers,
 } from "./ipc/loggerHandlers";
 import path from "path";
-import { closeLogger, initializeLogger } from "./libs/logger";
+import { closeLogger, initializeLogger } from "./utils/logger";
 import { LogLevel } from "../shared/types/logger.types";
 
 const logger = initializeLogger({
@@ -31,7 +31,10 @@ async function createWindow() {
   win.removeMenu();
   if (process.env.VITE_DEV_SERVER_URL) {
     win.loadURL(process.env.VITE_DEV_SERVER_URL);
+    logger.info("Getting URL by VITE DEV SERVER", "Main Process Electron");
+
     win.webContents.openDevTools();
+    logger.warn("Opennig DevTools Windows", "Main Process Electron");
   } else {
     win.loadFile(path.join(__dirname, "../renderer/index.html"));
   }
