@@ -17,6 +17,7 @@ function App() {
         logger.info('Button clicked')
     }
     const openLogsDirectoryClick = () => {
+        logger.info(' Click Button for Opening logs directory', 'Renderer:App');
         window.electron.logger.openLogDir();
     };
 
