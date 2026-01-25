@@ -186,6 +186,13 @@ class Logger implements ILogger {
     return this.config.logDir || this.getDefaultLogDir();
   }
 
+  updateConfig(config: Partial<LoggerConfig>): void {
+    this.config = { ...this.config, ...config };
+  }
+
+  getConfig(): LoggerConfig {
+    return { ...this.config };
+  }
   clearOldLogs(keepDays: number = 7): void {
     if (this.fileTransport) {
       this.fileTransport.clearOldLogsFiles(keepDays);

@@ -45,9 +45,15 @@ export function registerLoggerHandlers(): void {
     }
   });
 
-  /*ipcMain.handle('logger:getConfig', async () => { 
-        return logger.getConfig();
-    });*/
+  ipcMain.handle("logger:getConfig", async () => {
+    try {
+      return logger.getConfig();
+    } catch (error) {
+      logger.error("Error getting config Logger", "Main Process Electron:IPC", {
+        error,
+      });
+    }
+  });
 
   ipcMain.on("logger:openLogDir", () => {
     try {

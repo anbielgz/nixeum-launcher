@@ -11,7 +11,12 @@ const logger = initializeLogger({
   level: LogLevel.DEBUG,
 });
 
-logger.info("Application starting...", "Main Process Electron");
+logger.info("Application starting...", "Main Process Electron", {
+  appVersion: app.getVersion(),
+  os: process.platform,
+  arch: process.arch,
+  env: process.env.NODE_ENV,
+});
 
 let win: BrowserWindow | null = null;
 
