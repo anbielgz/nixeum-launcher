@@ -100,6 +100,33 @@ export class FileTransport {
     }
   }
 
+  private clearOldLogsRotatedFiles(): void {
+    try {
+      //obtener todos los archivos en el directorio de logs
+      const files = fs.readdirSync(this.logDir);
+
+      const todayFiles = files
+        .filter(
+          (file) => file.startsWith(this.currentDate) && file.endsWith(".log"),
+        )
+        .map((file) => ({
+          name: file,
+          path: path.join(this.logDir, file),
+          stats: fs.statSync(path.join(this.logDir, file)),
+        }))
+        .sort((a, b) => b.stats.mtimeMs - a.stats.mtimeMs);
+
+      //eliminar archivos antiguos si exceden el maximo permitido
+      if (todayFiles.length > this.maxFiles) {
+        todayFiles.slice(this.maxFiles).forEach((file) => {
+          fs.unlinkSync(file.path);
+        });
+      }
+    } catch (error) {
+      console.error("[Logger] Error clearing old rotated log files:", error);
+    }
+  }
+
   private async rotateLogFile(): Promise<void> {
     //verifica si el arhivo actual existe, si no exite, no hay nada que rotar
     if (!fs.existsSync(this.currentFile)) {
@@ -135,6 +162,9 @@ export class FileTransport {
     console.log(`[Logger] Log file rotated: ${path.basename(rotatedFileName)}`);
 
     this.initializeFileWriteStream();
+
+    //limpiar archivos antiguos si es necesario
+    this.clearOldLogsRotatedFiles();
   }
 
   async log(entry: LogEntry): Promise<void> {
@@ -162,6 +192,31 @@ export class FileTransport {
   close(): void {
     if (this.fileWriteStream) {
       this.fileWriteStream.end();
+    }
+  }
+
+  clearOldLogsFiles(keepDays: number): void {
+    try {
+      const files = fs.readdirSync(this.logDir);
+      const cutOffDate = new Date();
+      cutOffDate.setDate(cutOffDate.getDate() - keepDays);
+
+      files.forEach((file) => {
+        //si no es un archivo .log, ignorarlo
+        if (!file.endsWith(".log")) return;
+
+        // Extraer fecha del nombre del archivo (YYYY-MM-DD-launcher...)
+        const dateMatch = file.match(/^(\d{4}-\d{2}-\d{2})/);
+        if (!dateMatch) return;
+
+        const fileDate = new Date(dateMatch[1]);
+        if (fileDate < cutOffDate) {
+          const filePath = path.join(this.logDir, file);
+          fs.unlinkSync(filePath);
+        }
+      });
+    } catch (error) {
+      console.error("[Logger] Error clearing old log files:", error);
     }
   }
 }
